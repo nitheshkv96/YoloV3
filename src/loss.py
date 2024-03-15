@@ -31,14 +31,14 @@ class YoloLoss(nn.Module):
         box_preds = torch.cat([self.sigmoid(preds[...,1:3]),
                                 torch.exp(preds[...,3:5])*anchors], dim = -1)
         ious = intersection_over_union(box_preds[obj], targets[...,1:5][obj]).detach()
-        object_loss = self.bce((preds[...,0:1][obj]), (ious * targets[...,0:1][obj]))
+        object_loss = self.mse(self.sigmoid(preds[...,0:1][obj]), (ious * targets[...,0:1][obj]))
 
         # Box Coodinates Loss
         preds[..., 1:3] = self.sigmoid(preds[...,1:3]) # x, y to be between [0,1]
         targets[...,3:5] = torch.log(
             (1e-16 + targets[...,3:5]/anchors)
         )
-        box_loss = self.mse(preds[...,1:3][obj], targets[...,3:5][obj])
+        box_loss = self.mse(preds[...,1:5][obj], targets[...,1:5][obj])
 
 
         # Class Loss 
